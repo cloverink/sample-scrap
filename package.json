@@ -6,9 +6,11 @@
   "scripts": {
     "start": "node -r dotenv/config index.js",
     "db:up": "docker-compose -f database/docker-compose.yml up -d",
-    "db:clean": "node -r dotenv/config services/drop-db.js"
+    "db:clean": "node -r dotenv/config services/drop-db.js",
+    "test": "casperjs scripts/test-casper.js"
   },
   "dependencies": {
+    "casperjs": "^1.1.4",
     "cheerio": "^1.0.0-rc.2",
     "dotenv": "^6.0.0",
     "mysql": "^2.15.0",

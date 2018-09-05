@@ -18,11 +18,14 @@ const run = async () => {
   // logi('01 - fetch - category')
   // await fetchCategory.exec()
 
-  // logi('02 - fetch - page')
-  // await fetchProduct.exec()
+  logi('02 - fetch - page')
+  await fetchProduct.exec()
   
   
 }
+
+
+
 
 clear()
 run();
