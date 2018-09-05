@@ -7,7 +7,7 @@
     "start": "node -r dotenv/config index.js",
     "db:up": "docker-compose -f database/docker-compose.yml up -d",
     "db:clean": "node -r dotenv/config services/drop-db.js",
-    "test": "casperjs scripts/test-casper.js"
+    "test": "node scripts/test-puppeteer.js"
   },
   "dependencies": {
     "casperjs": "^1.1.4",
@@ -16,6 +16,7 @@
     "mysql": "^2.15.0",
     "phantomjs-prebuilt": "^2.1.16",
     "promise-mysql": "^3.2.0",
+    "puppeteer": "^1.7.0",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "tough-cookie": "^2.4.3",

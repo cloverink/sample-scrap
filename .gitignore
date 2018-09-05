@@ -3,3 +3,6 @@ package-lock.json
 yarn.lock
 .env
 database/db
+scripts/test-profile-dir
+*.pma
+example.png
