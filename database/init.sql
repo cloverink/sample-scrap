@@ -11,3 +11,13 @@ CREATE TABLE `categories` (
   PRIMARY KEY (`catid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+CREATE TABLE `products` (
+  `pid` int(11) NOT NULL AUTO_INCREMENT,
+  `catid` int(11) DEFAULT NULL,
+  `level` text,
+  `page` int(11) DEFAULT NULL,
+  `name` text,
+  `href` text,
+  `flag` int(11) DEFAULT '0',
+  PRIMARY KEY (`pid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;

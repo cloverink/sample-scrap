@@ -14,6 +14,7 @@ const exec = async () => {
     database: MYSQL_DB
   })
   await connection.query('truncate categories');
+  await connection.query('truncate products');
 
   await connection.end();
 
