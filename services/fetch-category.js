@@ -5,30 +5,9 @@ const mysql = require('promise-mysql')
 const { log, clear } = console
 const { MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB } = process.env
 
-
-
-const save = async (query) => {
-
-  log('saving...')
-
-  const connection = await mysql.createConnection({
-    host: MYSQL_HOST,
-    user: MYSQL_USER,
-    password: MYSQL_PASS,
-    database: MYSQL_DB
-  })
-
-  
-  for (q of query) {
-    await connection.query(q);
-  }
-
-  await connection.end();
-}
-
 module.exports.exec = async () => {
 
-  log('fetch...')
+  log('>> fetch category .... [START]')
 
   const options = {
     uri: 'https://www.lazada.co.th',
@@ -37,29 +16,25 @@ module.exports.exec = async () => {
   }
 
   const $ = await request(options)
-  const datacat = $("li[data-cate]")  
-  let query = []
+  const datacat = $("li[data-cate]")
 
-  datacat.each((k, cat) => {
-    const catid = $(cat).attr('data-cate')
-    const href = $(cat).find('> a').attr('href').trim()
-    const name = $(cat).find('> a > span').text().trim()
-    query.push(`insert into categories(level, href, name) values('${catid}','${href}','${name}')`)
-    // const subcat = $(datacat).find(`[data-spm="${catid}"]`)
-    // if (subcat.length === 0) return
+  const connection = await mysql.createConnection({
+    host: MYSQL_HOST,
+    user: MYSQL_USER,
+    password: MYSQL_PASS,
+    database: MYSQL_DB
+  })
 
-    // const subcats = subcat.find('a[href]')
-    // subcats.each((kk, scat) => {
-    //   const scatid = `${catid}_${kk + 1}`
-    //   const shref = $(scat).attr('href').trim()
-    //   const sname = $(cat).find('> span').text().trim()
-    //   query.push(`insert into categories(level, href, name) values('${scatid}','${shref}','${sname}')`)
-    // })
-  });
+  for (cat of datacat.toArray()) {
+      const catid = $(cat).attr('data-cate')
+      const href = $(cat).find('> a').attr('href').trim()
+      const name = $(cat).find('> a > span').text().trim()
+      log('-->>', catid, href)
+      const sql = `insert into categories(level, href, name) values('${catid}','${href}','${name}')`
+      await connection.query(sql);
+  }
 
-
-  
-  await save(query)
-  
+  await connection.end();
+   log('>> fetch category .... [DONE]')
 }
 
