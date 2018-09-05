@@ -1,0 +1,21 @@
+{
+  "name": "testnode",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node -r dotenv/config index.js",
+    "db:up": "docker-compose -f database/docker-compose.yml up -d"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "dotenv": "^6.0.0",
+    "mysql": "^2.15.0",
+    "promise-mysql": "^3.2.0",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2",
+    "tough-cookie": "^2.4.3",
+    "trim": "^0.0.1"
+  }
+  
+}
