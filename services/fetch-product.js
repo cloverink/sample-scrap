@@ -1,63 +1,86 @@
-const request = require("request-promise")
+const puppeteer = require('puppeteer');
 const cheerio = require("cheerio")
-const mysql = require('promise-mysql')
-const url = require('url');
 
-const { log, clear } = console
-const { MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB } = process.env
+const { SITE_TARGET, AGENT } = process.env
 
+const robot = async () => {
+  const browser = await puppeteer.launch({
+    userDataDir: __dirname + '/test-profile-dir',
+    headless: true
+  });
+  const page = await browser.newPage();
+  await page.setRequestInterception(true);
+  page.on('request', request => {
+    const isAboutType = ['image', 'xhr'].includes(request.resourceType())
+    const isAboutLink = request.url().includes('facebook') || request.url().includes('google')
+    if (isAboutType || isAboutLink) {
+      request.abort();
+    } else {
+      request.continue();
+    }
+  });
 
-const fetch = async() => {
+  page.on('load', o => {
+    logy('[DONE]')
+  });
 
-  const connection = await mysql.createConnection({
-    host: MYSQL_HOST,
-    user: MYSQL_USER,
-    password: MYSQL_PASS,
-    database: MYSQL_DB
-  })
-  const cat = await connection.query("select * from categories where flag = 0 limit 1");
-  await connection.end();
+  await page.goto(SITE_TARGET, {
+    "waitUntil": "networkidle0"
+  });
 
-  const { catid, level, href, name, flag } = cat[0]
-  log('>>>>', level, href, name)
+  // const bodyHandle = await page.$('body');
+  // const html = await page.evaluate(body => body.innerHTML, bodyHandle);
+  // await bodyHandle.dispose();
 
-  const url = href.includes('http:') ? href : `https:${href}`
+  // const $ = cheerio.load(html)
 
-  const options = {
-    uri: url,
-    json: true,
-    transform: body => cheerio.load(body)
+  // const cats = $(".home-category-list__category-grid")
+  // for (let i = 0; i < cats.length; i++) {
+  //   const cat = cats[i]
+  //   const href = SITE_TARGET + decodeURIComponent($(cat).attr('href'))
+  //   const sql = `insert into categories(href) values('${href}')`
+  //   await global.dbConnection.query(sql)
+  // }
+  // await browser.close();
+  return true
+}
+
+const checkPage = async (catid, href, page) => {
+  const url = `${href}?page=${page}`
+  logn(`    > fetch .... ${url} `)
+
+  const pages = await global.dbConnection.query(`select * from pages where catid=${catid} & page=${page}`)
+  
+  if(pages.length > 0) {
+    await checkPage(catid, href, page + 1)
+  } else {
+    const next = await robot(url)
+    // await global.dbConnection.query(`insert into pages(catid, page, href) values('${catid}','${page}','${url}')`)
+    // if(!next) return
+    // await checkPage(catid, href, page + 1)
   }
   
-    const $ = await request(options)
-    const dd = $("title").text()
-    const maxpage = +$('.ant-pagination li').eq(-2).attr('title')
-
-    log(`MAXPAGE === ${maxpage}`)
-
 }
 
-const exec = async () => {
-
-  log('>> fetch product .... [START]')
-
-  const connection = await mysql.createConnection({
-    host: MYSQL_HOST,
-    user: MYSQL_USER,
-    password: MYSQL_PASS,
-    database: MYSQL_DB
-  })
-
-  const cnt = await connection.query("select count(*) cnt from categories where flag = 0");
-  await connection.end();
-
-  if (cnt[0]['cnt'] === 0) {
-    log('>> fetch product .... [DONE]')
+const checkCategory = async() => {
+  const cats = await global.dbConnection.query('select * from categories where flag = 0 limit 1')
+ 
+  if(cats.length > 0) {
+    const {catid, href} = cats[0]
+    logyy(`>>  fetch CATEGORY ${catid}... [START]`)
+    logy(`    > fetch .... ${href}`)
+    await checkPage(catid, href, 0)
+    // await global.dbConnection.query(`update categories set flag=1 where catid=${catid}`)
+    // await checkCategory()
+  } else {
+    logyy('>>  fetch CATEGORY ... [Done]')
     return 
   }
-
-  await fetch()
-  // await exec()
 }
 
-module.exports.exec = exec
+
+module.exports.exec = async () => {
+  logg('>> fetch product .... [START]')
+  await checkCategory()
+  logg('>> fetch product .... [DONE]')
+}

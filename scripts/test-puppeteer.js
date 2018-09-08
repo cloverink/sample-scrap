@@ -38,6 +38,11 @@ const run = async () => {
   const title = $("ul.ant-pagination li").eq(-2).text()
   console.log(title)
 
+  // await page.screenshot({
+  //   path: 'results.png',
+  //   fullPage: true
+  // });
+
   await browser.close();
 }
 

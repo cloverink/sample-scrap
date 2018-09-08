@@ -1,40 +1,55 @@
-const request = require("request-promise")
+const puppeteer = require('puppeteer');
 const cheerio = require("cheerio")
-const mysql = require('promise-mysql')
 
-const { log, clear } = console
-const { MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB } = process.env
+const { SITE_TARGET, AGENT } = process.env
+
+const robot = async() => {
+  const browser = await puppeteer.launch({
+    userDataDir: __dirname + '/test-profile-dir',
+    headless: true
+  });
+  const page = await browser.newPage();
+  await page.setRequestInterception(true);
+  page.on('request', request => {
+    const isAboutType = ['image', 'xhr'].includes(request.resourceType())
+    const isAboutLink = request.url().includes('facebook') || request.url().includes('google')
+    if (isAboutType || isAboutLink) {
+      request.abort();
+    } else {
+      request.continue();
+    }
+  });
+
+  page.on('load', o => {
+    logy('page loaded')
+  });
+
+  await page.goto(SITE_TARGET, {
+    "waitUntil": "networkidle0"
+  });
+
+  const bodyHandle = await page.$('body');
+  const html = await page.evaluate(body => body.innerHTML, bodyHandle);
+  await bodyHandle.dispose();
+
+  const $ = cheerio.load(html)
+
+  const cats = $(".home-category-list__category-grid")
+  for(let i=0; i < cats.length; i++) {
+    const cat = cats[i]
+    const href = SITE_TARGET + decodeURIComponent($(cat).attr('href'))
+    const sql = `insert into categories(href) values('${href}')`
+    await global.dbConnection.query(sql)
+  }
+  await browser.close();
+}
+
 
 module.exports.exec = async () => {
+  logg('>> fetch category .... [START]')
 
-  log('>> fetch category .... [START]')
+  await robot()
 
-  const options = {
-    uri: 'https://www.lazada.co.th',
-    json: true,
-    transform: body => cheerio.load(body)
-  }
-
-  const $ = await request(options)
-  const datacat = $("li[data-cate]")
-
-  const connection = await mysql.createConnection({
-    host: MYSQL_HOST,
-    user: MYSQL_USER,
-    password: MYSQL_PASS,
-    database: MYSQL_DB
-  })
-
-  for (cat of datacat.toArray()) {
-      const catid = $(cat).attr('data-cate')
-      const href = $(cat).find('> a').attr('href').trim()
-      const name = $(cat).find('> a > span').text().trim()
-      log('-->>', catid, href)
-      const sql = `insert into categories(level, href, name) values('${catid}','${href}','${name}')`
-      await connection.query(sql);
-  }
-
-  await connection.end();
-   log('>> fetch category .... [DONE]')
+  logg('>> fetch category .... [DONE]')
 }
 

@@ -4,5 +4,6 @@ yarn.lock
 .env
 database/db
 scripts/test-profile-dir
+services/test-profile-dir
 *.pma
 example.png
