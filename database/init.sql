@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS `sc` DEFAULT CHARACTER SET utf8 ;
-USE `sc` 
+CREATE DATABASE IF NOT EXISTS `sc__shopee` DEFAULT CHARACTER SET utf8 ;
+USE `sc__shopee` 
 
 DROP TABLE IF EXISTS `categories`;
 CREATE TABLE `categories` (
@@ -11,7 +11,7 @@ CREATE TABLE `categories` (
   PRIMARY KEY (`catid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-DROP TABLE IF EXISTS `categories`;
+DROP TABLE IF EXISTS `products`;
 CREATE TABLE `products` (
   `pid` int(11) NOT NULL AUTO_INCREMENT,
   `catid` int(11) DEFAULT NULL,
@@ -24,11 +24,11 @@ CREATE TABLE `products` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `pages`;
-CREATE TABLE `sc`.`pages` (
+CREATE TABLE `pages` (
   `pageid` INT NOT NULL AUTO_INCREMENT,
   `catid` TEXT NULL,
   `level` TEXT NULL,
   `href` TEXT NULL,
   `flag` INT NULL DEFAULT 0,
-  PRIMARY KEY (`pageid`))
-ENGINE = MyISAM;
+  PRIMARY KEY (`pageid`)
+) ENGINE = MyISAM;
