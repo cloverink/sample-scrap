@@ -7,7 +7,7 @@
     "start": "node -r dotenv/config index.js",
     "db:up": "docker-compose -f database/docker-compose.yml up -d",
     "db:clean": "node -r dotenv/config services/drop-db.js",
-    "test": "node scripts/test-puppeteer.js"
+    "test": "node scripts/test-puppeteer.loop.js"
   },
   "dependencies": {
     "casperjs": "^1.1.4",

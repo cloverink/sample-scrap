@@ -3,36 +3,34 @@ const cheerio = require("cheerio")
 
 const { SITE_TARGET, AGENT } = process.env
 
-const robot = async () => {
+const robot = async (url) => {
   const browser = await puppeteer.launch({
     userDataDir: __dirname + '/test-profile-dir',
-    headless: true
+    headless: false
   });
   const page = await browser.newPage();
   await page.setRequestInterception(true);
   page.on('request', request => {
-    const isAboutType = ['image', 'xhr'].includes(request.resourceType())
+    const isAboutType = ['image', 'xhr', 'stylesheet'].includes(request.resourceType())
     const isAboutLink = request.url().includes('facebook') || request.url().includes('google')
     if (isAboutType || isAboutLink) {
       request.abort();
     } else {
-      request.continue();
     }
+    request.continue();
   });
 
-  page.on('load', o => {
-    logy('[DONE]')
+  page.on('load', o => { 
+    clickNextPage(page)
   });
 
-  await page.goto(SITE_TARGET, {
+  await page.goto(url, {
     "waitUntil": "networkidle0"
   });
 
-  // const bodyHandle = await page.$('body');
-  // const html = await page.evaluate(body => body.innerHTML, bodyHandle);
-  // await bodyHandle.dispose();
+  // await clickNextPage(page)
 
-  // const $ = cheerio.load(html)
+  // page.click('.shopee-icon-button--right')
 
   // const cats = $(".home-category-list__category-grid")
   // for (let i = 0; i < cats.length; i++) {
@@ -42,12 +40,28 @@ const robot = async () => {
   //   await global.dbConnection.query(sql)
   // }
   // await browser.close();
-  return true
+  // return next
+}
+
+const clickNextPage = async(page) => {
+
+  log('clickNextPage')
+
+  const html = await page.content();
+  const $ = cheerio.load(html)
+  const paging = $('.shopee-page-controller .shopee-button-solid--primary + button')
+  const next = !paging.hasClass('shopee-icon-button--right')
+
+  await page.click('.shopee-icon-button--right')
+
+  await clickNextPage(page)
+  
+
 }
 
 const checkPage = async (catid, href, page) => {
   const url = `${href}?page=${page}`
-  logn(`    > fetch .... ${url} `)
+  logy(`    > fetch .... ${url} `)
 
   const pages = await global.dbConnection.query(`select * from pages where catid=${catid} & page=${page}`)
   
