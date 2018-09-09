@@ -5,7 +5,8 @@ const mysql = require('promise-mysql')
 const {
   dbConnection,
   fetchCategory,
-  fetchProduct
+  fetchProduct,
+  preShop
 } = require('./services')
 
 const { log, clear } = console
@@ -25,11 +26,14 @@ const run = async () => {
   await dbConnection.init()
 
   try {
-    logi('01 - fetch - category')
-    await fetchCategory.exec()
+    // logi('01 - fetch - category')
+    // await fetchCategory.exec()
   
-    logi('02 - fetch - page')
-    await fetchProduct.exec()
+    // logi('02 - fetch - page')
+    // await fetchProduct.exec()
+
+    // logi('03 - prepare shop')
+    // await preShop.exec()
 
   } catch(e) {
     console.error(e)

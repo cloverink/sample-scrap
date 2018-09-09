@@ -7,10 +7,15 @@ const phantom = require('phantom');
     console.info('Requesting', requestData.url);
   });
 
-  const url = 'https://shopee.co.th/api/v2/search_items/?by=pop&limit=50&match_id=48&newest=50&order=desc&page_type=search'
+  const url = 'https://shopee.co.th/shop/11253342'
   const status = await page.open(url);
   const content = await page.property('content');
-  console.log(content);
+  // console.log(content);
 
-  await instance.exit();
+  page.onLoadFinished = function (status) {
+    page.render('screenshot.png');
+    phantom.exit();
+  };
+
+  // await instance.exit();
 })();
