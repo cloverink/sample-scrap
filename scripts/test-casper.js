@@ -1,12 +1,9 @@
 var casper = require('casper').create();
-casper.start('http://casperjs.org/');
+casper.start('https://shopee.co.th/api/v2/search_items/?by=pop&limit=50&match_id=48&newest=50&order=desc&page_type=search');
 
 casper.then(function () {
-  this.echo('First Page: ' + this.getTitle());
+  casper.echo(casper.getPageContent());
 });
 
-casper.thenOpen('http://phantomjs.org', function () {
-  this.echo('Second Page: ' + this.getTitle());
-});
-
+console.log(123)
 casper.run();

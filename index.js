@@ -24,11 +24,17 @@ const run = async () => {
   logi('00 - init - db')
   await dbConnection.init()
 
-  logi('01 - fetch - category')
-  await fetchCategory.exec()
+  try {
+    logi('01 - fetch - category')
+    await fetchCategory.exec()
+  
+    logi('02 - fetch - page')
+    await fetchProduct.exec()
 
-  logi('02 - fetch - page')
-  await fetchProduct.exec()
+  } catch(e) {
+    console.error(e)
+  }
+
   
   
   logi('99 - disconnect - db')

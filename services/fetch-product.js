@@ -1,79 +1,44 @@
-const puppeteer = require('puppeteer');
-const cheerio = require("cheerio")
+const request = require("request-promise")
+const {get} = require('lodash/fp')
 
-const { SITE_TARGET, AGENT } = process.env
+const AGENT = process.env.AGENT
+const PAGE_SIZE = +process.env.PAGE_SIZE
 
-const robot = async (url) => {
-  const browser = await puppeteer.launch({
-    userDataDir: __dirname + '/test-profile-dir',
-    headless: false
-  });
-  const page = await browser.newPage();
-  await page.setRequestInterception(true);
-  page.on('request', request => {
-    const isAboutType = ['image', 'xhr', 'stylesheet'].includes(request.resourceType())
-    const isAboutLink = request.url().includes('facebook') || request.url().includes('google')
-    if (isAboutType || isAboutLink) {
-      request.abort();
-    } else {
-    }
-    request.continue();
-  });
+const checkProduct = async(catid, index) => {
+  const page = index/PAGE_SIZE
+  logm(`    > product .... page ${page} ${index}`)
+  if(index >= 10000) return
 
-  page.on('load', o => { 
-    clickNextPage(page)
-  });
-
-  await page.goto(url, {
-    "waitUntil": "networkidle0"
-  });
-
-  // await clickNextPage(page)
-
-  // page.click('.shopee-icon-button--right')
-
-  // const cats = $(".home-category-list__category-grid")
-  // for (let i = 0; i < cats.length; i++) {
-  //   const cat = cats[i]
-  //   const href = SITE_TARGET + decodeURIComponent($(cat).attr('href'))
-  //   const sql = `insert into categories(href) values('${href}')`
-  //   await global.dbConnection.query(sql)
-  // }
-  // await browser.close();
-  // return next
-}
-
-const clickNextPage = async(page) => {
-
-  log('clickNextPage')
-
-  const html = await page.content();
-  const $ = cheerio.load(html)
-  const paging = $('.shopee-page-controller .shopee-button-solid--primary + button')
-  const next = !paging.hasClass('shopee-icon-button--right')
-
-  await page.click('.shopee-icon-button--right')
-
-  await clickNextPage(page)
-  
-
-}
-
-const checkPage = async (catid, href, page) => {
-  const url = `${href}?page=${page}`
-  logy(`    > fetch .... ${url} `)
-
-  const pages = await global.dbConnection.query(`select * from pages where catid=${catid} & page=${page}`)
-  
-  if(pages.length > 0) {
-    await checkPage(catid, href, page + 1)
-  } else {
-    const next = await robot(url)
-    // await global.dbConnection.query(`insert into pages(catid, page, href) values('${catid}','${page}','${url}')`)
-    // if(!next) return
-    // await checkPage(catid, href, page + 1)
+  const options = {
+    method: 'GET',
+    url: 'https://shopee.co.th/api/v2/search_items/',
+    qs: {
+      by: 'pop',
+      limit: PAGE_SIZE,
+      match_id: catid,
+      newest: index,
+      order: 'desc',
+      page_type: 'search'
+    },
+    headers: {
+      'user-agent': AGENT
+    },
+    json: true
   }
-  
+
+  const products = await request(options)
+  const items = get('items')(products)
+  if(items.length === 0) return
+
+  for(item of items) {
+    const { name, shopid, itemid } = item
+
+    const _products = await global.dbConnection.query(`select * from products where pid=${itemid}`)
+    if (_products.length === 0) {
+      await global.dbConnection.query(`insert into products(pid, catid, shopid, page, name) values(${itemid}, ${catid}, ${shopid}, ${page}, ${dbConnection.escape(name)})`)
+    }
+  }
+  await checkProduct(catid, index + PAGE_SIZE)
 }
 
 const checkCategory = async() => {
@@ -81,13 +46,11 @@ const checkCategory = async() => {
  
   if(cats.length > 0) {
     const {catid, href} = cats[0]
-    logyy(`>>  fetch CATEGORY ${catid}... [START]`)
-    logy(`    > fetch .... ${href}`)
-    await checkPage(catid, href, 0)
-    // await global.dbConnection.query(`update categories set flag=1 where catid=${catid}`)
-    // await checkCategory()
+    logy(`  > category .... ${catid} ${href}`)
+    await checkProduct(catid, 0)
+    await global.dbConnection.query(`update categories set flag=1 where catid=${catid}`)
+    await checkCategory()
   } else {
-    logyy('>>  fetch CATEGORY ... [Done]')
     return 
   }
 }

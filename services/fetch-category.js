@@ -1,55 +1,30 @@
-const puppeteer = require('puppeteer');
-const cheerio = require("cheerio")
+const request = require("request-promise")
+const {get} = require('lodash/fp')
 
-const { SITE_TARGET, AGENT } = process.env
-
-const robot = async() => {
-  const browser = await puppeteer.launch({
-    userDataDir: __dirname + '/test-profile-dir',
-    headless: true
-  });
-  const page = await browser.newPage();
-  await page.setRequestInterception(true);
-  page.on('request', request => {
-    const isAboutType = ['image', 'xhr'].includes(request.resourceType())
-    const isAboutLink = request.url().includes('facebook') || request.url().includes('google')
-    if (isAboutType || isAboutLink) {
-      request.abort();
-    } else {
-      request.continue();
-    }
-  });
-
-  page.on('load', o => {
-    logy('page loaded')
-  });
-
-  await page.goto(SITE_TARGET, {
-    "waitUntil": "networkidle0"
-  });
-
-  const bodyHandle = await page.$('body');
-  const html = await page.evaluate(body => body.innerHTML, bodyHandle);
-  await bodyHandle.dispose();
-
-  const $ = cheerio.load(html)
-
-  const cats = $(".home-category-list__category-grid")
-  for(let i=0; i < cats.length; i++) {
-    const cat = cats[i]
-    const href = SITE_TARGET + decodeURIComponent($(cat).attr('href'))
-    const sql = `insert into categories(href) values('${href}')`
-    await global.dbConnection.query(sql)
-  }
-  await browser.close();
-}
-
+const { SITE_TARGET } = process.env
 
 module.exports.exec = async () => {
   logg('>> fetch category .... [START]')
 
-  await robot()
+  const options = {
+    method: 'GET',
+    url: 'https://shopee.co.th/api/v1/category_list/',
+    json: true
+  }
+  
+  const cats = await request(options)
+  
+  for(cat of cats) {
+    const { catid, display_name } = get('main')(cat)
+    const href = `${SITE_TARGET}/${display_name}-cat.${catid}`
+    logy(`  > category .... ${catid} ${display_name}`)
 
+    const _cats = await global.dbConnection.query(`select * from categories where catid=${catid}`)
+    if(_cats.length === 0) {
+      await global.dbConnection.query(`insert into categories(catid, href, name) values(${catid}, '${href}', '${display_name}')`)
+    }
+
+  }
+  
   logg('>> fetch category .... [DONE]')
 }
-

@@ -7,19 +7,22 @@
     "start": "node -r dotenv/config index.js",
     "db:up": "docker-compose -f database/docker-compose.yml up -d",
     "db:clean": "node -r dotenv/config services/drop-db.js",
-    "test": "node scripts/test-puppeteer.loop.js"
+    "test": "node scripts/test-scrap.js"
   },
   "dependencies": {
     "casperjs": "^1.1.4",
     "cheerio": "^1.0.0-rc.2",
     "dotenv": "^6.0.0",
+    "lodash": "^4.17.10",
     "mysql": "^2.15.0",
+    "phantom": "^6.0.3",
     "phantomjs-prebuilt": "^2.1.16",
     "promise-mysql": "^3.2.0",
     "puppeteer": "^1.7.0",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "tough-cookie": "^2.4.3",
-    "trim": "^0.0.1"
+    "trim": "^0.0.1",
+    "unirest": "^0.5.1"
   }
 }
