@@ -6,7 +6,8 @@ const {
   dbConnection,
   fetchCategory,
   fetchProduct,
-  preShop
+  preShop,
+  fetchShop
 } = require('./services')
 
 const { log, clear } = console
@@ -34,6 +35,9 @@ const run = async () => {
 
     // logi('03 - prepare shop')
     // await preShop.exec()
+
+    logi('04 - fetch shop')
+    await fetchShop.exec()
 
   } catch(e) {
     console.error(e)
