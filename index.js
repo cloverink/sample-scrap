@@ -7,7 +7,8 @@ const {
   fetchCategory,
   fetchProduct,
   preShop,
-  fetchShop
+  fetchShop,
+  cleanShop
 } = require('./services')
 
 const { log, clear } = console
@@ -36,8 +37,11 @@ const run = async () => {
     // logi('03 - prepare shop')
     // await preShop.exec()
 
-    logi('04 - fetch shop')
-    await fetchShop.exec()
+    // logi('04 - fetch shop')
+    // await fetchShop.exec()
+
+    logi('05 - fetch clean')
+    await cleanShop.exec()
 
   } catch(e) {
     console.error(e)
